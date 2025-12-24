@@ -14,7 +14,6 @@ interface PageProps {
 
 export default async function CryptoDetailPage({ params }: PageProps) {
   const resolvedParams = await params;
-  console.log(resolvedParams);
   const symbol = resolvedParams.id.toUpperCase();
   
   const [tickerData, klinesData] = await Promise.all([
@@ -27,23 +26,20 @@ export default async function CryptoDetailPage({ params }: PageProps) {
   const baseCurrency = symbol.replace("USDT", "");
   const currentPrice = parseFloat(tickerData.lastPrice);
 
-
-
   return (
-    <div className="flex min-h-screen bg-[#0c0e13] font-sans">
+    <div className="flex min-h-screen bg-gray-50 dark:bg-[#0c0e13] font-sans">
       <Sidebar currentPath="/crypto-market" />
-      
       <main className="flex-1 p-4 md:p-6 lg:p-8">
         <div className="max-w-[1600px] mx-auto">
           <div className="mb-6 px-16 flex flex-col lg:flex-row items-start justify-between gap-4">
             <div className="flex items-center justify-center gap-4">
               <div>
-                <h1 className="text-3xl md:text-4xl font-bold text-white flex items-center gap-3">
+                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
                   {symbol}
-                  <span className="text-lg text-zinc-500">{baseCurrency}</span>
+                  <span className="text-lg text-gray-500 dark:text-zinc-500">{baseCurrency}</span>
                 </h1>
                 <div className="flex items-center gap-3 mt-1">
-                  <span className="text-2xl font-bold text-white">
+                  <span className="text-2xl font-bold text-gray-900 dark:text-white">
                     ${currentPrice.toLocaleString(undefined, {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
@@ -61,24 +57,21 @@ export default async function CryptoDetailPage({ params }: PageProps) {
                 </div>
               </div>
             </div>
-
           </div>
-
-            <div className="flex flex-col lg:flex-row gap-6">
+          <div className="flex flex-col lg:flex-row gap-6">
               <div className="flex-1 space-y-6">
                 <Suspense fallback={<Loader />}>
                   <PriceChart symbol={symbol} initialKlines={klinesData} />
                 </Suspense>
 
                 <Suspense fallback={<Loader />}>
-                  <StatsCards ticker={tickerData}/>
+                  <StatsCards ticker={tickerData} />
                 </Suspense>
-
-                <div className="bg-zinc-950/50 border border-zinc-800 rounded-2xl p-6">
-                  <h2 className="text-xl font-bold text-white mb-4">
+                <div className="bg-white dark:bg-zinc-950/50 border border-gray-200 dark:border-zinc-800 rounded-2xl p-6">
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
                     About {symbol}
                   </h2>
-                  <p className="text-zinc-400 leading-relaxed">
+                  <p className="text-gray-600 dark:text-zinc-400 leading-relaxed">
                     {baseCurrency === "BTC" && (
                       <>
                         Bitcoin is a decentralized digital currency created in 2009 by an unknown
@@ -106,11 +99,9 @@ export default async function CryptoDetailPage({ params }: PageProps) {
                   </p>
                 </div>
               </div>
-
             </div>
         </div>
       </main>
     </div>
   );
 }
-

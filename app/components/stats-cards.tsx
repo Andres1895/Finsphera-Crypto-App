@@ -42,10 +42,10 @@ export default function StatsCards({ ticker }: StatsCardsProps) {
       {stats.map((stat, index) => (
         <div
           key={index}
-          className="bg-zinc-950/50 border border-zinc-800 rounded-2xl p-6 hover:border-zinc-700 transition-colors"
+          className="bg-white dark:bg-zinc-950/50 border border-gray-200 dark:border-zinc-800 rounded-2xl p-6 hover:border-gray-300 dark:hover:border-zinc-700 transition-colors"
         >
-          <h3 className="text-sm font-medium text-zinc-400 mb-2">{stat.title}</h3>
-          <p className="text-2xl font-bold text-white mb-2">{stat.value}</p>
+          <h3 className="text-sm font-medium text-gray-600 dark:text-zinc-400 mb-2">{stat.title}</h3>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{stat.value}</p>
           {stat.change && (
             <p className={`text-sm font-medium ${stat.isPositive ? "text-green-500" : "text-red-500"}`}>
               {stat.change}

@@ -2,6 +2,7 @@
 
 import { getKlines } from "../lib/binanceAPI";
 import type { PriceChartProps } from "../lib/types";
+import { formatNumber } from "../lib/utils";
 import { useState, useEffect } from "react";
 import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts";
 import Loader from "./loader";
@@ -37,15 +38,15 @@ export default function PriceChart({ symbol, initialKlines }: PriceChartProps) {
   const chartData = klines.map((k) => ({
     price: parseFloat(k.close),
     time: new Date(k.closeTime).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
-  }));
+  }));    
 
   return (
-    <div className="bg-zinc-950/50 border border-zinc-800 rounded-2xl p-6">
+    <div className="bg-white dark:bg-zinc-950/50 border border-gray-200 dark:border-zinc-800 rounded-2xl p-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h2 className="text-xl font-bold text-white">Price History</h2>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Price History</h2>
           <div className="flex items-center gap-2 mt-1">
-            <p className="text-sm text-zinc-500">Last updated: Just now</p>
+            <p className="text-sm text-gray-500 dark:text-zinc-500">Last updated: Just now</p>
             {!loading && (
               <span className={`text-sm font-medium ${priceChange >= 0 ? "text-green-500" : "text-red-500"}`}>
                 {priceChange >= 0 ? "+" : ""}{priceChange.toFixed(2)}%
@@ -54,14 +55,14 @@ export default function PriceChart({ symbol, initialKlines }: PriceChartProps) {
           </div>
         </div>
 
-        <div className="flex gap-2 bg-zinc-900 p-1 rounded-lg">
+        <div className="flex gap-2 bg-gray-100 dark:bg-zinc-900 p-1 rounded-lg">
           {Object.keys(TIMEFRAMES).map((tf) => (
             <button
               key={tf}
               onClick={() => setTimeframe(tf as keyof typeof TIMEFRAMES)}
               disabled={loading}
               className={`px-4 py-2 text-sm font-medium rounded-md transition-colors disabled:opacity-50 ${
-                timeframe === tf ? "bg-zinc-800 text-white" : "text-zinc-400 hover:text-white"
+                timeframe === tf ? "bg-white dark:bg-zinc-800 text-gray-900 dark:text-white shadow-sm" : "text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
               }`}
             >
               {tf}
@@ -110,9 +111,9 @@ export default function PriceChart({ symbol, initialKlines }: PriceChartProps) {
               <Tooltip
                 content={({ payload }) => (
                   payload?.[0] ? (
-                    <div className="bg-black border border-zinc-800 rounded-lg p-2">
-                      <p className="text-white text-sm">Price: ${payload[0].payload.price.toFixed(2)}</p>
-                      <p className="text-zinc-400 text-xs">{payload[0].payload.time}</p>
+                    <div className="bg-white dark:bg-black border border-gray-200 dark:border-zinc-800 rounded-lg p-2 shadow-lg">
+                      <p className="text-gray-900 dark:text-white text-sm">Price: {formatNumber(payload[0].payload.price)}</p>
+                      <p className="text-gray-500 dark:text-zinc-400 text-xs">{payload[0].payload.time}</p>
                     </div>
                   ) : null
                 )}

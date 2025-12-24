@@ -1,5 +1,5 @@
 # Project type definitions relocation
-_Exported on 12/24/2025 at 14:39:38 CST from Cursor (2.2.43)_
+_Exported on 12/24/2025 at 15:12:27 CST from Cursor (2.2.43)_
 
 ---
 
@@ -1638,3 +1638,920 @@ Perfect! I've successfully centralized all types in your project under `app/lib/
 
 All imports use the `type` keyword for type-only imports, which is a TypeScript best practice and ensures clean linting with no warnings. ✨
 
+---
+
+**User**
+
+create a number hanlder function for table component and truncated it to 2 decimals for numbers less than 0 and use K M B for bigger numbers 
+
+---
+
+**Cursor**
+
+I'll create an improved number handler function for the table component that truncates to 2 decimals for numbers less than 1 and uses K, M, B for larger numbers.
+
+```typescript
+const formatNumber = (num: string | number): string => {
+  const value = typeof num === "string" ? parseFloat(num) : num;
+  
+  // Handle invalid numbers
+  if (isNaN(value)) return "$0.00";
+  
+  // For numbers >= 1 billion
+  if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
+  
+  // For numbers >= 1 million
+  if (value >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
+  
+  // For numbers >= 1 thousand
+  if (value >= 1e3) return `$${(value / 1e3).toFixed(2)}K`;
+  
+  // For numbers less than 1 (including decimals)
+  if (value < 1) return `$${value.toFixed(2)}`;
+  
+  // For numbers between 1 and 999
+  return `$${value.toFixed(2)}`;
+};
+```
+
+I'll improve the `formatNumber` function in the table component to properly handle numbers less than 1 with 2 decimal places, and maintain the K, M, B formatting for larger numbers.
+
+```typescriptreact
+"use client";
+
+import type { TableProps } from "../lib/types";
+import { useState, useMemo } from "react";
+import Link from "next/link";
+
+export default function Table({ data }: TableProps) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+
+  const filteredData = useMemo(() => {
+    const filtered = data.filter((item) =>
+      item.symbol.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    return filtered.sort((a, b) => {
+      if (sortDirection === "asc") {
+        return a.symbol.localeCompare(b.symbol);
+      } else {
+        return b.symbol.localeCompare(a.symbol);
+      }
+    });
+  }, [data, searchTerm, sortDirection]);
+
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentData = filteredData.slice(startIndex, endIndex);
+
+  const handleSort = () => {
+    setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+    setCurrentPage(1); 
+  };
+
+  const formatNumber = (num: string | number): string => {
+    const value = typeof num === "string" ? parseFloat(num) : num;
+    
+    // Handle invalid numbers
+    if (isNaN(value)) return "$0.00";
+    
+    // For numbers >= 1 billion
+    if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
+    
+    // For numbers >= 1 million
+    if (value >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
+    
+    // For numbers >= 1 thousand
+    if (value >= 1e3) return `$${(value / 1e3).toFixed(2)}K`;
+    
+    // For all numbers less than 1000 (including decimals < 1), truncate to 2 decimals
+    return `$${value.toFixed(2)}`;
+  };
+
+  return (
+    <div className="w-full">
+
+      <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <h2 className="text-2xl font-bold text-white">Market Assets</h2>
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="relative flex-1 sm:flex-initial">
+            <input
+              className="w-full sm:w-96 pl-4 py-3 bg-zinc-900/50 border border-zinc-800 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-700 transition-colors"
+              type="text"
+              placeholder="Search Crypto"
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
+            />
+          </div>
+            <button
+              onClick={handleSort}
+              className="flex items-center gap-2 px-4 py-3 bg-zinc-900/50 border border-zinc-800 rounded-xl hover:bg-zinc-800 transition-colors"
+              title={`Sort ${sortDirection === "asc" ? "Descending" : "Ascending"}`}
+            >
+              <span className="text-sm font-medium text-zinc-300">
+                {sortDirection === "asc" ? "A-Z" : "Z-A"}
+              </span>
+              <span className="text-zinc-400">
+                {sortDirection === "asc" ? "▲" : "▼"}
+              </span>
+            </button>
+        </div>
+      </div>
+      <div className="bg-zinc-950/50 border border-zinc-800 rounded-2xl overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full max-w-full">
+            <thead>
+              <tr className="border-b border-zinc-800">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                  Asset
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                  Price (USDT)
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                  24h Change
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                  24h Volume
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                  Market Cap
+                </th>
+                <th className="px-6 py-4 text-right text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                  More Info
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-800/50">
+              {filteredData.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-16 text-center">
+                      <div className="text-lg font-medium text-zinc-400">
+                        No crypto found
+                      </div>
+                  </td>
+                </tr>
+              ) : (
+                currentData.map((item) => {
+                const priceChangePercent = parseFloat(item.priceChangePercent);
+                const isPositive = priceChangePercent >= 0;
+                const cryptoName = item.symbol.replace("USDT", "");
+
+                return (
+                  <tr
+                    key={item.symbol}
+                    className="hover:bg-zinc-900/30 transition-colors"
+                  >
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+
+                        <div>
+                          <div className="font-semibold text-white">
+                            {cryptoName}
+                          </div>
+                          <div className="text-sm text-zinc-500">
+                            {item.symbol}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+
+                    <td className="px-6 py-4">
+                      <div className="font-semibold text-white">
+                        ${parseFloat(item.lastPrice).toLocaleString()}
+                      </div>
+                    </td>
+
+                    <td className="px-6 py-4">
+                      <span
+                        className={`inline-flex items-center gap-1 px-3 py-1 rounded-lg text-sm font-medium ${
+                          isPositive
+                            ? "bg-green-500/10 text-green-500"
+                            : "bg-red-500/10 text-red-500"
+                        }`}
+                      >
+                        {isPositive ? "▲" : "▼"} {Math.abs(priceChangePercent).toFixed(1)}%
+                      </span>
+                    </td>
+
+                    <td className="px-6 py-4">
+                      <div className="text-zinc-300">
+                        {formatNumber(item.quoteVolume)}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-zinc-300">
+                        {formatNumber(parseFloat(item.quoteVolume) * 1.5)}
+                      </div>
+                    </td>
+
+                    <td className="px-6 py-4 text-right">
+                      <Link href={`/crypto-market/${item.symbol}`}>
+                        <button className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg transition-colors">
+                          Info
+                        </button>
+                      </Link>
+                    </td>
+                  </tr>
+                );
+              })
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="px-6 py-4 border-t border-zinc-800 flex items-center justify-between">
+          <div className="text-sm text-zinc-400">
+            {startIndex + 1}-{Math.min(endIndex, filteredData.length)} of{" "}
+            {filteredData.length} assets
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+              disabled={currentPage === 1 ||filteredData.length === 0}
+              className="px-4 py-2 text-sm font-medium text-zinc-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors border border-zinc-800 rounded-lg hover:bg-zinc-900"
+            >
+              Previous
+            </button>
+            <button
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+              }
+              disabled={currentPage === totalPages || filteredData.length === 0}
+              className="px-4 py-2 text-sm font-medium text-white bg-zinc-900 hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors border border-zinc-800 rounded-lg"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+```
+
+Perfect! I've improved the `formatNumber` function in the table component. Now let me also create a centralized utility file so this function can be reused across your project:
+
+```typescript
+/**
+ * Formats a number as currency with appropriate suffixes
+ * - Numbers < 1: truncated to 2 decimals (e.g., $0.52)
+ * - Numbers 1-999: shown with 2 decimals (e.g., $125.50)
+ * - Numbers >= 1K: shown with K suffix (e.g., $1.25K)
+ * - Numbers >= 1M: shown with M suffix (e.g., $1.25M)
+ * - Numbers >= 1B: shown with B suffix (e.g., $1.25B)
+ */
+export const formatNumber = (num: string | number): string => {
+  const value = typeof num === "string" ? parseFloat(num) : num;
+  
+  // Handle invalid numbers
+  if (isNaN(value)) return "$0.00";
+  
+  // For numbers >= 1 billion
+  if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
+  
+  // For numbers >= 1 million
+  if (value >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
+  
+  // For numbers >= 1 thousand
+  if (value >= 1e3) return `$${(value / 1e3).toFixed(2)}K`;
+  
+  // For all numbers less than 1000 (including decimals < 1), truncate to 2 decimals
+  return `$${value.toFixed(2)}`;
+};
+
+```
+
+Now let me update the table component to use the centralized utility function:
+
+```typescriptreact
+"use client";
+
+import type { TableProps } from "../lib/types";
+import { formatNumber } from "../lib/utils";
+import { useState, useMemo } from "react";
+import Link from "next/link";
+
+export default function Table({ data }: TableProps) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+
+  const filteredData = useMemo(() => {
+    const filtered = data.filter((item) =>
+      item.symbol.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    return filtered.sort((a, b) => {
+      if (sortDirection === "asc") {
+        return a.symbol.localeCompare(b.symbol);
+      } else {
+        return b.symbol.localeCompare(a.symbol);
+      }
+    });
+  }, [data, searchTerm, sortDirection]);
+
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentData = filteredData.slice(startIndex, endIndex);
+
+  const handleSort = () => {
+    setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+    setCurrentPage(1); 
+  };
+
+  const formatNumber = (num: string | number): string => {
+    const value = typeof num === "string" ? parseFloat(num) : num;
+    
+    // Handle invalid numbers
+    if (isNaN(value)) return "$0.00";
+    
+    // For numbers >= 1 billion
+    if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
+    
+    // For numbers >= 1 million
+    if (value >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
+    
+    // For numbers >= 1 thousand
+    if (value >= 1e3) return `$${(value / 1e3).toFixed(2)}K`;
+    
+    // For all numbers less than 1000 (including decimals < 1), truncate to 2 decimals
+    return `$${value.toFixed(2)}`;
+  };
+
+  return (
+    <div className="w-full">
+
+      <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <h2 className="text-2xl font-bold text-white">Market Assets</h2>
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="relative flex-1 sm:flex-initial">
+            <input
+              className="w-full sm:w-96 pl-4 py-3 bg-zinc-900/50 border border-zinc-800 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-700 transition-colors"
+              type="text"
+              placeholder="Search Crypto"
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
+            />
+          </div>
+            <button
+              onClick={handleSort}
+              className="flex items-center gap-2 px-4 py-3 bg-zinc-900/50 border border-zinc-800 rounded-xl hover:bg-zinc-800 transition-colors"
+              title={`Sort ${sortDirection === "asc" ? "Descending" : "Ascending"}`}
+            >
+              <span className="text-sm font-medium text-zinc-300">
+                {sortDirection === "asc" ? "A-Z" : "Z-A"}
+              </span>
+              <span className="text-zinc-400">
+                {sortDirection === "asc" ? "▲" : "▼"}
+              </span>
+            </button>
+        </div>
+      </div>
+      <div className="bg-zinc-950/50 border border-zinc-800 rounded-2xl overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full max-w-full">
+            <thead>
+              <tr className="border-b border-zinc-800">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                  Asset
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                  Price (USDT)
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                  24h Change
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                  24h Volume
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                  Market Cap
+                </th>
+                <th className="px-6 py-4 text-right text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                  More Info
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-800/50">
+              {filteredData.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-16 text-center">
+                      <div className="text-lg font-medium text-zinc-400">
+                        No crypto found
+                      </div>
+                  </td>
+                </tr>
+              ) : (
+                currentData.map((item) => {
+                const priceChangePercent = parseFloat(item.priceChangePercent);
+                const isPositive = priceChangePercent >= 0;
+                const cryptoName = item.symbol.replace("USDT", "");
+
+                return (
+                  <tr
+                    key={item.symbol}
+                    className="hover:bg-zinc-900/30 transition-colors"
+                  >
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+
+                        <div>
+                          <div className="font-semibold text-white">
+                            {cryptoName}
+                          </div>
+                          <div className="text-sm text-zinc-500">
+                            {item.symbol}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+
+                    <td className="px-6 py-4">
+                      <div className="font-semibold text-white">
+                        ${parseFloat(item.lastPrice).toLocaleString()}
+                      </div>
+                    </td>
+
+                    <td className="px-6 py-4">
+                      <span
+                        className={`inline-flex items-center gap-1 px-3 py-1 rounded-lg text-sm font-medium ${
+                          isPositive
+                            ? "bg-green-500/10 text-green-500"
+                            : "bg-red-500/10 text-red-500"
+                        }`}
+                      >
+                        {isPositive ? "▲" : "▼"} {Math.abs(priceChangePercent).toFixed(1)}%
+                      </span>
+                    </td>
+
+                    <td className="px-6 py-4">
+                      <div className="text-zinc-300">
+                        {formatNumber(item.quoteVolume)}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-zinc-300">
+                        {formatNumber(parseFloat(item.quoteVolume) * 1.5)}
+                      </div>
+                    </td>
+
+                    <td className="px-6 py-4 text-right">
+                      <Link href={`/crypto-market/${item.symbol}`}>
+                        <button className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg transition-colors">
+                          Info
+                        </button>
+                      </Link>
+                    </td>
+                  </tr>
+                );
+              })
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="px-6 py-4 border-t border-zinc-800 flex items-center justify-between">
+          <div className="text-sm text-zinc-400">
+            {startIndex + 1}-{Math.min(endIndex, filteredData.length)} of{" "}
+            {filteredData.length} assets
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+              disabled={currentPage === 1 ||filteredData.length === 0}
+              className="px-4 py-2 text-sm font-medium text-zinc-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors border border-zinc-800 rounded-lg hover:bg-zinc-900"
+            >
+              Previous
+            </button>
+            <button
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+              }
+              disabled={currentPage === totalPages || filteredData.length === 0}
+              className="px-4 py-2 text-sm font-medium text-white bg-zinc-900 hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors border border-zinc-800 rounded-lg"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+```
+
+```typescriptreact
+"use client";
+
+import type { TableProps } from "../lib/types";
+import { formatNumber } from "../lib/utils";
+import { useState, useMemo } from "react";
+import Link from "next/link";
+
+export default function Table({ data }: TableProps) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+
+  const filteredData = useMemo(() => {
+    const filtered = data.filter((item) =>
+      item.symbol.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    return filtered.sort((a, b) => {
+      if (sortDirection === "asc") {
+        return a.symbol.localeCompare(b.symbol);
+      } else {
+        return b.symbol.localeCompare(a.symbol);
+      }
+    });
+  }, [data, searchTerm, sortDirection]);
+
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentData = filteredData.slice(startIndex, endIndex);
+
+  const handleSort = () => {
+    setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+    setCurrentPage(1); 
+  };
+
+  return (
+    <div className="w-full">
+
+      <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <h2 className="text-2xl font-bold text-white">Market Assets</h2>
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="relative flex-1 sm:flex-initial">
+            <input
+              className="w-full sm:w-96 pl-4 py-3 bg-zinc-900/50 border border-zinc-800 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-700 transition-colors"
+              type="text"
+              placeholder="Search Crypto"
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
+            />
+          </div>
+            <button
+              onClick={handleSort}
+              className="flex items-center gap-2 px-4 py-3 bg-zinc-900/50 border border-zinc-800 rounded-xl hover:bg-zinc-800 transition-colors"
+              title={`Sort ${sortDirection === "asc" ? "Descending" : "Ascending"}`}
+            >
+              <span className="text-sm font-medium text-zinc-300">
+                {sortDirection === "asc" ? "A-Z" : "Z-A"}
+              </span>
+              <span className="text-zinc-400">
+                {sortDirection === "asc" ? "▲" : "▼"}
+              </span>
+            </button>
+        </div>
+      </div>
+      <div className="bg-zinc-950/50 border border-zinc-800 rounded-2xl overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full max-w-full">
+            <thead>
+              <tr className="border-b border-zinc-800">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                  Asset
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                  Price (USDT)
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                  24h Change
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                  24h Volume
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                  Market Cap
+                </th>
+                <th className="px-6 py-4 text-right text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                  More Info
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-800/50">
+              {filteredData.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-16 text-center">
+                      <div className="text-lg font-medium text-zinc-400">
+                        No crypto found
+                      </div>
+                  </td>
+                </tr>
+              ) : (
+                currentData.map((item) => {
+                const priceChangePercent = parseFloat(item.priceChangePercent);
+                const isPositive = priceChangePercent >= 0;
+                const cryptoName = item.symbol.replace("USDT", "");
+
+                return (
+                  <tr
+                    key={item.symbol}
+                    className="hover:bg-zinc-900/30 transition-colors"
+                  >
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+
+                        <div>
+                          <div className="font-semibold text-white">
+                            {cryptoName}
+                          </div>
+                          <div className="text-sm text-zinc-500">
+                            {item.symbol}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+
+                    <td className="px-6 py-4">
+                      <div className="font-semibold text-white">
+                        ${parseFloat(item.lastPrice).toLocaleString()}
+                      </div>
+                    </td>
+
+                    <td className="px-6 py-4">
+                      <span
+                        className={`inline-flex items-center gap-1 px-3 py-1 rounded-lg text-sm font-medium ${
+                          isPositive
+                            ? "bg-green-500/10 text-green-500"
+                            : "bg-red-500/10 text-red-500"
+                        }`}
+                      >
+                        {isPositive ? "▲" : "▼"} {Math.abs(priceChangePercent).toFixed(1)}%
+                      </span>
+                    </td>
+
+                    <td className="px-6 py-4">
+                      <div className="text-zinc-300">
+                        {formatNumber(item.quoteVolume)}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-zinc-300">
+                        {formatNumber(parseFloat(item.quoteVolume) * 1.5)}
+                      </div>
+                    </td>
+
+                    <td className="px-6 py-4 text-right">
+                      <Link href={`/crypto-market/${item.symbol}`}>
+                        <button className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg transition-colors">
+                          Info
+                        </button>
+                      </Link>
+                    </td>
+                  </tr>
+                );
+              })
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="px-6 py-4 border-t border-zinc-800 flex items-center justify-between">
+          <div className="text-sm text-zinc-400">
+            {startIndex + 1}-{Math.min(endIndex, filteredData.length)} of{" "}
+            {filteredData.length} assets
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+              disabled={currentPage === 1 ||filteredData.length === 0}
+              className="px-4 py-2 text-sm font-medium text-zinc-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors border border-zinc-800 rounded-lg hover:bg-zinc-900"
+            >
+              Previous
+            </button>
+            <button
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+              }
+              disabled={currentPage === totalPages || filteredData.length === 0}
+              className="px-4 py-2 text-sm font-medium text-white bg-zinc-900 hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors border border-zinc-800 rounded-lg"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+```
+
+Perfect! I've successfully created an improved number handler function for your table component. Here's what I did:
+
+## Changes Made:
+
+### 1. **Created `app/lib/utils.ts`** - Centralized utility functions
+   - Added the `formatNumber` function with comprehensive documentation
+   - Handles all number ranges properly:
+     - **Numbers < 1**: Shows with 2 decimals (e.g., `$0.52`)
+     - **Numbers 1-999**: Shows with 2 decimals (e.g., `$125.50`)
+     - **Numbers ≥ 1K**: Shows with K suffix (e.g., `$1.25K`)
+     - **Numbers ≥ 1M**: Shows with M suffix (e.g., `$1.25M`)
+     - **Numbers ≥ 1B**: Shows with B suffix (e.g., `$1.25B`)
+   - Includes NaN validation for safety
+
+### 2. **Updated `app/components/table.tsx`**
+   - Removed the local `formatNumber` function
+   - Now imports and uses the centralized `formatNumber` from `utils.ts`
+   - Cleaner code and reusable across the project
+
+The function is now available for use in any other component that needs number formatting! ✨
+
+---
+
+**User**
+
+After following the steps for dark and light mode in https://tailwindcss.com/docs/dark-mode  I am not able to  swith between modes. Review my configuration and fix the issues on the project
+
+---
+
+**Cursor**
+
+I'll help you fix the dark/light mode toggling issue. Let me first examine the relevant files to understand the current configuration.
+
+I found the issues! There are three main problems:
+
+1. **Layout has hardcoded `className="dark"`** - This prevents toggling because the class is statically set
+2. **Missing dark mode custom variant in CSS** - You need to configure Tailwind to use the manual dark mode selector
+3. **No theme persistence** - The theme choice isn't saved to localStorage
+
+Let me fix these issues:
+
+```css
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+```
+
+```typescriptreact
+import type { Metadata } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
+import "./globals.css";
+
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+export const metadata: Metadata = {
+  title: "Crypto App",
+  description: "Finsphera Crypto App by Andres Maturano",
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en">
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                const theme = localStorage.getItem('theme');
+                if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                  document.documentElement.classList.add('dark');
+                } else {
+                  document.documentElement.classList.remove('dark');
+                }
+              })();
+            `,
+          }}
+        />
+      </head>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        {children}
+      </body>
+    </html>
+  );
+}
+
+```
+
+```typescriptreact
+"use client";
+
+import { useEffect, useState } from "react";
+
+export default function ThemeToggle() {
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    // Check initial theme on mount
+    setIsDark(document.documentElement.classList.contains("dark"));
+  }, []);
+
+  const toggleTheme = () => {
+    const newTheme = !isDark;
+    setIsDark(newTheme);
+
+    if (newTheme) {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+    }
+  };
+
+  return (
+    <button
+      onClick={toggleTheme}
+      className="p-2 rounded-lg bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 transition-colors"
+      aria-label="Toggle theme"
+    >
+      <svg
+        className={`w-5 h-5 text-yellow-500 ${isDark ? "block" : "hidden"}`}
+        fill="currentColor"
+        viewBox="0 0 20 20"
+      >
+        <path
+          fillRule="evenodd"
+          d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"
+          clipRule="evenodd"
+        />
+      </svg>
+      <svg
+        className={`w-5 h-5 text-slate-700 ${isDark ? "hidden" : "block"}`}
+        fill="currentColor"
+        viewBox="0 0 20 20"
+      >
+        <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+      </svg>
+    </button>
+  );
+}
+
+
+```
+
+Perfect! I've fixed the dark mode implementation. Here's what I changed:
+
+## Changes Made:
+
+### 1. **`globals.css`** - Added dark mode custom variant
+Added the `@custom-variant` declaration as per [Tailwind's documentation](https://tailwindcss.com/docs/dark-mode) to enable manual dark mode toggling:
+
+```3:3:app/globals.css
+@custom-variant dark (&:where(.dark, .dark *));
+```
+
+### 2. **`layout.tsx`** - Removed hardcoded dark class & added initialization script
+- Removed the hardcoded `className="dark"` from the `html` element
+- Added an inline script that runs **before** page render to prevent flash of wrong theme
+- The script checks localStorage for saved theme preference, or falls back to system preference
+
+### 3. **`theme-toggle.tsx`** - Enhanced with state management and persistence
+- Added React state to track the current theme
+- Saves theme preference to `localStorage` when toggled
+- Uses proper state-based icon visibility instead of just CSS classes
+
+## How It Works Now:
+
+1. **On first visit**: The app respects your system's dark/light mode preference
+2. **When toggling**: Your choice is saved to localStorage and persists across page reloads
+3. **No flash**: The inline script in the `<head>` applies the theme before the page renders, preventing any flash of incorrect theme
+
+Now your dark/light mode toggle should work perfectly! Try clicking the theme toggle button and refreshing the page - your preference will be saved. 🌙☀️

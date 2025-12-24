@@ -8,7 +8,7 @@ export default function Error({ message, title = "Error" }: ErrorProps) {
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="bg-zinc-950/50 border border-red-800 rounded-2xl p-6 text-center"
+      className="bg-white dark:bg-zinc-950/50 border border-red-300 dark:border-red-800 rounded-2xl p-6 text-center"
     >
       <motion.div
         animate={{ rotate: [0, 10, -10, 0] }}
@@ -17,8 +17,8 @@ export default function Error({ message, title = "Error" }: ErrorProps) {
       >
         <div className="text-5xl mb-4">⚠️</div>
       </motion.div>
-      <h3 className="text-xl font-bold text-white mb-2">{title}</h3>
-      <p className="text-sm text-zinc-400 mb-4">{message}</p>
+      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{title}</h3>
+      <p className="text-sm text-gray-600 dark:text-zinc-400 mb-4">{message}</p>
       <motion.button
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
