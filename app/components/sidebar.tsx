@@ -58,7 +58,6 @@ export default function Sidebar({ currentPath }: SidebarProps) {
                 className="flex items-center gap-2 group "
                 target="_blank"
               >
-                <span className="text-2xl">🚀</span>
                 <div>
                   <h2 className="text-xl font-bold text-gray-900 dark:text-white group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors">
                     Finsphera
